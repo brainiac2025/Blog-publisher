@@ -1,0 +1,37 @@
+name: Publish Blog Posts
+
+on:
+  push:
+    paths:
+      - 'posts/*.md'  # Trigger only when markdown files in posts/ change
+
+jobs:
+  build-and-deploy:
+    runs-on: ubuntu-latest
+    steps:
+      # Checkout the repository code
+      - name: Checkout
+        uses: actions/checkout@v4
+
+      # Install dependencies (e.g., a markdown-to-HTML converter)
+      - name: Set up Node.js
+        uses: actions/setup-node@v4
+        with:
+          node-version: '20'
+      - run: npm install -g markdown-it  # Install markdown-it globally
+
+      # Convert markdown to HTML
+      - name: Convert Markdown to HTML
+        run: |
+          mkdir -p output
+          for file in posts/*.md; do
+            filename=$(basename "$file" .md)
+            markdown-it "$file" > "output/$filename.html"
+          done
+
+      # Deploy to GitHub Pages
+      - name: Deploy to GitHub Pages
+        uses: peaceiris/actions-gh-pages@v4
+        with:
+          github_token: ${{ secrets.GITHUB_TOKEN }}
+          publish_dir: ./output
